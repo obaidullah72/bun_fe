@@ -2,33 +2,56 @@ import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { resetPasswordApi } from "../../api/auth.api.js";
+import AuthLayout from "../../components/auth/AuthLayout.jsx";
+import AuthField from "../../components/auth/AuthField.jsx";
+import { authButtonClass, authFooterLinkClass } from "../../components/auth/authInputClasses.js";
 
 function ResetPassword() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const token = params.get("token") || "";
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
+      setLoading(true);
       await resetPasswordApi({ token, password });
       toast.success("Password reset successful");
       navigate("/login");
     } catch {
       toast.error("Reset failed");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4 dark:bg-slate-950">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm dark:bg-slate-900">
-        <h1 className="text-2xl font-bold">Reset Password</h1>
-        <input type="password" required value={password} onChange={function (e) { setPassword(e.target.value); }} placeholder="New password" className="mt-4 w-full rounded-xl border px-4 py-3 dark:bg-slate-800" />
-        <button type="submit" className="mt-4 w-full rounded-xl bg-blue-600 py-3 text-white font-semibold">Reset Password</button>
-        <Link to="/login" className="mt-4 block text-center text-sm text-blue-600">Back to login</Link>
+    <AuthLayout
+      title="Reset password"
+      subtitle="Enter your new password below"
+      footer={
+        <p className="text-center text-sm text-slate-500">
+          <Link to="/login" className={authFooterLinkClass}>
+            Back to login
+          </Link>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthField
+          field="newPassword"
+          name="password"
+          value={password}
+          onChange={function (e) { setPassword(e.target.value); }}
+          required
+        />
+        <button type="submit" disabled={loading} className={authButtonClass}>
+          {loading ? "Resetting..." : "Reset Password"}
+        </button>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
 
