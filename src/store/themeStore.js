@@ -1,25 +1,12 @@
 import { create } from "zustand";
 
-const stored = localStorage.getItem("theme") || "light";
+document.documentElement.classList.remove("dark");
 
-if (stored === "dark") {
-  document.documentElement.classList.add("dark");
-}
-
-export const useThemeStore = create(function (set) {
+export const useThemeStore = create(function () {
   return {
-    theme: stored,
+    theme: "light",
     toggleTheme: function () {
-      set(function (state) {
-        const next = state.theme === "dark" ? "light" : "dark";
-        localStorage.setItem("theme", next);
-        if (next === "dark") {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
-        return { theme: next };
-      });
+      // Light theme only for consistent UI
     }
   };
 });

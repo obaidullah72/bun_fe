@@ -1,12 +1,22 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { getCategoriesApi, createCategoryApi, updateCategoryApi, deleteCategoryApi } from "../../api/category.api.js";
+import { Plus, Pencil, Trash2, Tags } from "lucide-react";
+import {
+  getCategoriesApi,
+  createCategoryApi,
+  updateCategoryApi,
+  deleteCategoryApi
+} from "../../api/category.api.js";
 import { useAuthStore } from "../../store/authStore.js";
 import { canManageInventory } from "../../utils/roles.js";
+import PageHeader from "../../components/ui/PageHeader.jsx";
+import FormField from "../../components/ui/FormField.jsx";
+import Button from "../../components/ui/Button.jsx";
 import Loader from "../../components/common/Loader.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
 import Modal from "../../components/common/Modal.jsx";
+import { tableWrapClass, thClass, tdClass, btnIcon } from "../../components/ui/uiClasses.js";
 
 function Categories() {
   const user = useAuthStore(function (s) { return s.user; });
@@ -18,7 +28,7 @@ function Categories() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
-    queryFn: function () { return getCategoriesApi(); }
+    queryFn: getCategoriesApi
   });
 
   const categories = data?.data?.data || [];
@@ -45,31 +55,62 @@ function Categories() {
     }
   });
 
+  function openCreate() {
+    setEditing(null);
+    setForm({ name: "", description: "" });
+    setOpen(true);
+  }
+
+  function openEdit(cat) {
+    setEditing(cat);
+    setForm({ name: cat.name, description: cat.description || "" });
+    setOpen(true);
+  }
+
   if (isLoading) return <Loader />;
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Categories</h1>
-        {canEdit && (
-          <button type="button" onClick={function () { setOpen(true); setEditing(null); setForm({ name: "", description: "" }); }}
-            className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white">Add Category</button>
-        )}
-      </div>
-      {!categories.length ? <div className="mt-6"><EmptyState title="No categories" /></div> : (
-        <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-slate-900">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800"><tr><th className="p-4">Name</th><th className="p-4">Description</th>{canEdit && <th className="p-4">Actions</th>}</tr></thead>
+      <PageHeader
+        title="Categories"
+        subtitle="Organize products into categories"
+        action={
+          canEdit ? (
+            <Button type="button" icon={Plus} onClick={openCreate}>
+              Add Category
+            </Button>
+          ) : null
+        }
+      />
+
+      {!categories.length ? (
+        <EmptyState title="No categories yet" description="Create your first product category." icon={Tags} />
+      ) : (
+        <div className={tableWrapClass}>
+          <table className="w-full">
+            <thead className="border-b border-slate-100 bg-slate-50">
+              <tr>
+                <th className={thClass}>Name</th>
+                <th className={thClass}>Description</th>
+                {canEdit && <th className={thClass}>Actions</th>}
+              </tr>
+            </thead>
             <tbody>
               {categories.map(function (cat) {
                 return (
-                  <tr key={cat._id} className="border-t border-slate-100 dark:border-slate-800">
-                    <td className="p-4 font-medium">{cat.name}</td>
-                    <td className="p-4 text-slate-500">{cat.description}</td>
+                  <tr key={cat._id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                    <td className={`${tdClass} font-medium text-slate-900`}>{cat.name}</td>
+                    <td className={tdClass}>{cat.description || "—"}</td>
                     {canEdit && (
-                      <td className="p-4 space-x-2">
-                        <button type="button" className="text-blue-600" onClick={function () { setEditing(cat); setForm({ name: cat.name, description: cat.description || "" }); setOpen(true); }}>Edit</button>
-                        <button type="button" className="text-red-600" onClick={function () { deleteMutation.mutate(cat._id); }}>Delete</button>
+                      <td className={tdClass}>
+                        <div className="flex gap-1">
+                          <button type="button" className={btnIcon} onClick={function () { openEdit(cat); }} title="Edit">
+                            <Pencil size={16} />
+                          </button>
+                          <button type="button" className={`${btnIcon} hover:bg-red-50 hover:text-red-600`} onClick={function () { deleteMutation.mutate(cat._id); }} title="Delete">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -79,11 +120,12 @@ function Categories() {
           </table>
         </div>
       )}
+
       <Modal open={open} title={editing ? "Edit Category" : "Add Category"} onClose={function () { setOpen(false); }}>
         <form onSubmit={function (e) { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
-          <input required value={form.name} onChange={function (e) { setForm({ ...form, name: e.target.value }); }} placeholder="Name" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <textarea value={form.description} onChange={function (e) { setForm({ ...form, description: e.target.value }); }} placeholder="Description" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <button type="submit" className="w-full rounded-xl bg-blue-600 py-2 text-white">Save</button>
+          <FormField label="Category name" name="name" icon={Tags} value={form.name} onChange={function (e) { setForm({ ...form, name: e.target.value }); }} placeholder="e.g. Beverages" required />
+          <FormField label="Description" name="description" type="textarea" value={form.description} onChange={function (e) { setForm({ ...form, description: e.target.value }); }} placeholder="Optional description" />
+          <Button type="submit" className="w-full">Save Category</Button>
         </form>
       </Modal>
     </div>

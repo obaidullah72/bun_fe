@@ -1,7 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { ClipboardList, PackageCheck } from "lucide-react";
 import { getPurchaseOrdersApi, receivePurchaseOrderApi } from "../../api/purchaseOrder.api.js";
+import PageHeader from "../../components/ui/PageHeader.jsx";
+import Button from "../../components/ui/Button.jsx";
 import Loader from "../../components/common/Loader.jsx";
+import EmptyState from "../../components/common/EmptyState.jsx";
+import { cardClass } from "../../components/ui/uiClasses.js";
 
 function PurchaseOrders() {
   const queryClient = useQueryClient();
@@ -14,29 +19,33 @@ function PurchaseOrders() {
   });
 
   if (isLoading) return <Loader />;
+
   return (
     <div>
-      <h1 className="text-2xl font-bold dark:text-white">Purchase Orders</h1>
-      <div className="mt-6 space-y-4">
-        {orders.map(function (o) {
-          return (
-            <div key={o._id} className="rounded-2xl bg-white p-5 shadow-sm dark:bg-slate-900">
-              <div className="flex justify-between">
-                <div>
-                  <p className="font-semibold">{o.supplier?.name}</p>
-                  <p className="text-sm text-slate-500">{o.items?.length} items · Total: {o.total}</p>
+      <PageHeader title="Purchase Orders" subtitle="Receive stock from suppliers" />
+      {!orders.length ? <EmptyState title="No purchase orders" icon={ClipboardList} /> : (
+        <div className="space-y-4">
+          {orders.map(function (o) {
+            return (
+              <div key={o._id} className={`${cardClass} flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between`}>
+                <div className="flex gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600"><ClipboardList size={20} /></span>
+                  <div>
+                    <p className="font-semibold text-slate-900">{o.supplier?.name}</p>
+                    <p className="text-sm text-slate-500">{o.items?.length} items · Total: {o.total}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm dark:bg-slate-800">{o.status}</span>
+                <div className="flex items-center gap-3">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${o.status === "received" ? "bg-emerald-50 text-emerald-700" : o.status === "ordered" ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{o.status}</span>
                   {o.status !== "received" && o.status !== "cancelled" && (
-                    <button type="button" onClick={function () { receiveMutation.mutate(o._id); }} className="rounded-xl bg-green-600 px-3 py-1 text-sm text-white">Receive</button>
+                    <Button type="button" variant="secondary" icon={PackageCheck} onClick={function () { receiveMutation.mutate(o._id); }}>Receive</Button>
                   )}
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

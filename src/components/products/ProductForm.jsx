@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Save } from "lucide-react";
 import { getCategoriesApi } from "../../api/category.api.js";
 import { getSuppliersApi } from "../../api/supplier.api.js";
 import { getShelvesApi } from "../../api/shelf.api.js";
+import PageHeader from "../ui/PageHeader.jsx";
+import FormField from "../ui/FormField.jsx";
+import Button from "../ui/Button.jsx";
+import { cardClass } from "../ui/uiClasses.js";
 
 function ProductForm({ initial, onSubmit, title }) {
   const [form, setForm] = useState({
@@ -41,39 +46,45 @@ function ProductForm({ initial, onSubmit, title }) {
     });
   }
 
+  const categoryOptions = [{ value: "", label: "Select category" }].concat(
+    (categories.data?.data?.data || []).map(function (c) { return { value: c._id, label: c.name }; })
+  );
+  const supplierOptions = [{ value: "", label: "Select supplier" }].concat(
+    (suppliers.data?.data?.data || []).map(function (s) { return { value: s._id, label: s.name }; })
+  );
+  const shelfOptions = [{ value: "", label: "Select shelf location" }].concat(
+    (shelves.data?.data?.data || []).map(function (s) {
+      return {
+        value: s._id,
+        label: `${s.shelfName} · ${s.rackNumber || ""} · ${s.rowNumber || ""} · ${s.pointName || ""}`
+      };
+    })
+  );
+
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold dark:text-white">{title}</h1>
-      <form onSubmit={function (e) { e.preventDefault(); onSubmit(form); }} className="mt-6 grid gap-4 md:grid-cols-2">
-        <input name="name" required value={form.name} onChange={handleChange} placeholder="Name" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <input name="sku" required value={form.sku} onChange={handleChange} placeholder="SKU" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <input name="barcode" value={form.barcode} onChange={handleChange} placeholder="Barcode" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <select name="unit" value={form.unit} onChange={handleChange} className="rounded-xl border px-4 py-2 dark:bg-slate-900">
-          {["pcs", "kg", "liter", "box", "pack"].map(function (u) { return <option key={u}>{u}</option>; })}
-        </select>
-        <select name="category" value={form.category} onChange={handleChange} className="rounded-xl border px-4 py-2 dark:bg-slate-900">
-          <option value="">Category</option>
-          {(categories.data?.data?.data || []).map(function (c) { return <option key={c._id} value={c._id}>{c.name}</option>; })}
-        </select>
-        <select name="supplier" value={form.supplier} onChange={handleChange} className="rounded-xl border px-4 py-2 dark:bg-slate-900">
-          <option value="">Supplier</option>
-          {(suppliers.data?.data?.data || []).map(function (s) { return <option key={s._id} value={s._id}>{s.name}</option>; })}
-        </select>
-        <select name="shelf" value={form.shelf} onChange={handleChange} className="md:col-span-2 rounded-xl border px-4 py-2 dark:bg-slate-900">
-          <option value="">Shelf location</option>
-          {(shelves.data?.data?.data || []).map(function (s) {
-            const label = `${s.shelfName} - ${s.rackNumber} - ${s.rowNumber} - ${s.pointName}`;
-            return <option key={s._id} value={s._id}>{label}</option>;
-          })}
-        </select>
-        <input name="purchasePrice" type="number" value={form.purchasePrice} onChange={handleChange} placeholder="Purchase price" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <input name="sellingPrice" type="number" required value={form.sellingPrice} onChange={handleChange} placeholder="Selling price" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <input name="stockQuantity" type="number" value={form.stockQuantity} onChange={handleChange} placeholder="Stock" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <input name="minStockLevel" type="number" value={form.minStockLevel} onChange={handleChange} placeholder="Min stock" className="rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="md:col-span-2 rounded-xl border px-4 py-2 dark:bg-slate-900" />
-        <button type="submit" className="md:col-span-2 rounded-xl bg-blue-600 py-3 font-semibold text-white">Save Product</button>
+    <div>
+      <PageHeader title={title} subtitle="Fill in product details and inventory info" />
+      <form onSubmit={function (e) { e.preventDefault(); onSubmit(form); }} className={`${cardClass} max-w-4xl p-6`}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField label="Product name" name="name" icon="product" value={form.name} onChange={handleChange} placeholder="Product name" required />
+          <FormField label="SKU" name="sku" value={form.sku} onChange={handleChange} placeholder="SKU-001" required />
+          <FormField label="Barcode" name="barcode" value={form.barcode} onChange={handleChange} placeholder="Barcode number" />
+          <FormField label="Unit" name="unit" type="select" value={form.unit} onChange={handleChange} options={["pcs", "kg", "liter", "box", "pack"]} />
+          <FormField label="Category" name="category" type="select" icon="category" value={form.category} onChange={handleChange} options={categoryOptions} />
+          <FormField label="Supplier" name="supplier" type="select" icon="supplier" value={form.supplier} onChange={handleChange} options={supplierOptions} />
+          <FormField label="Shelf location" name="shelf" type="select" icon="shelf" value={form.shelf} onChange={handleChange} options={shelfOptions} className="md:col-span-2" />
+          <FormField label="Purchase price" name="purchasePrice" type="number" icon="price" value={form.purchasePrice} onChange={handleChange} placeholder="0" />
+          <FormField label="Selling price" name="sellingPrice" type="number" icon="price" value={form.sellingPrice} onChange={handleChange} placeholder="0" required />
+          <FormField label="Stock quantity" name="stockQuantity" type="number" icon="stock" value={form.stockQuantity} onChange={handleChange} placeholder="0" />
+          <FormField label="Min stock level" name="minStockLevel" type="number" icon="stock" value={form.minStockLevel} onChange={handleChange} placeholder="5" />
+          <FormField label="Description" name="description" type="textarea" value={form.description} onChange={handleChange} placeholder="Product description" className="md:col-span-2" />
+        </div>
+        <Button type="submit" icon={Save} className="mt-6 w-full sm:w-auto">
+          Save Product
+        </Button>
       </form>
     </div>
   );
 }
+
 export default ProductForm;

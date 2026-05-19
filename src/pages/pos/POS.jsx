@@ -1,8 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import {
+  ShoppingCart, ScanLine, User, Phone, CreditCard, Percent, DollarSign,
+  Minus, Plus, Trash2, Receipt
+} from "lucide-react";
 import { scanProductApi } from "../../api/product.api.js";
 import { createSaleApi } from "../../api/pos.api.js";
+import PageHeader from "../../components/ui/PageHeader.jsx";
+import FormField from "../../components/ui/FormField.jsx";
+import Button from "../../components/ui/Button.jsx";
+import { cardClass, inputClass, btnIcon } from "../../components/ui/uiClasses.js";
 
 function POS() {
   const navigate = useNavigate();
@@ -81,51 +89,60 @@ function POS() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold dark:text-white">Point of Sale</h1>
-      <div className="mt-6 grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2 space-y-4">
-          <form onSubmit={handleScan} className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-            <input value={code} onChange={function (e) { setCode(e.target.value); }} placeholder="Scan SKU, barcode, or QR" className="flex-1 rounded-xl border px-4 py-3 dark:bg-slate-800" autoFocus />
-            <button type="submit" className="rounded-xl bg-blue-600 px-5 py-3 text-white font-semibold">Add</button>
+      <PageHeader title="Point of Sale" subtitle="Scan products and complete checkout" />
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <div className="space-y-4 xl:col-span-2">
+          <form onSubmit={handleScan} className={`${cardClass} flex gap-3 p-4`}>
+            <div className="relative flex-1">
+              <ScanLine className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input value={code} onChange={function (e) { setCode(e.target.value); }} placeholder="Scan SKU, barcode, or QR" className={`${inputClass} pl-10`} autoFocus />
+            </div>
+            <Button type="submit" icon={Plus}>Add</Button>
           </form>
-          <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-900">
-            <h2 className="font-semibold mb-3">Cart Items</h2>
+
+          <div className={`${cardClass} p-4`}>
+            <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-900">
+              <ShoppingCart size={18} className="text-blue-600" /> Cart Items
+            </h2>
             {cart.map(function (item) {
               return (
-                <div key={item._id} className="flex items-center justify-between border-b py-3 dark:border-slate-800">
+                <div key={item._id} className="flex items-center justify-between border-b border-slate-100 py-3 last:border-0">
                   <div>
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium text-slate-900">{item.name}</p>
                     <p className="text-sm text-slate-500">{item.sku} · {item.sellingPrice} each</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={function () { updateQty(item._id, item.quantity - 1); }} className="rounded border px-2">-</button>
-                    <span>{item.quantity}</span>
-                    <button type="button" onClick={function () { updateQty(item._id, item.quantity + 1); }} className="rounded border px-2">+</button>
-                    <button type="button" onClick={function () { removeItem(item._id); }} className="ml-2 text-red-600">Remove</button>
+                    <button type="button" onClick={function () { updateQty(item._id, item.quantity - 1); }} className={btnIcon}><Minus size={16} /></button>
+                    <span className="min-w-[2rem] text-center font-medium">{item.quantity}</span>
+                    <button type="button" onClick={function () { updateQty(item._id, item.quantity + 1); }} className={btnIcon}><Plus size={16} /></button>
+                    <button type="button" onClick={function () { removeItem(item._id); }} className={`${btnIcon} text-red-500 hover:bg-red-50`}><Trash2 size={16} /></button>
                   </div>
                 </div>
               );
             })}
-            {!cart.length && <p className="text-slate-500 text-sm">Cart is empty</p>}
+            {!cart.length && <p className="py-8 text-center text-sm text-slate-500">Cart is empty — scan a product to begin</p>}
           </div>
         </div>
-        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900 space-y-3">
-          <input value={customerName} onChange={function (e) { setCustomerName(e.target.value); }} placeholder="Customer name (optional)" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <input value={customerPhone} onChange={function (e) { setCustomerPhone(e.target.value); }} placeholder="Customer phone (optional)" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <select value={paymentMethod} onChange={function (e) { setPaymentMethod(e.target.value); }} className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800">
-            {["Cash", "Card", "Bank Transfer", "Mobile Wallet"].map(function (m) { return <option key={m}>{m}</option>; })}
-          </select>
-          <input type="number" value={tax} onChange={function (e) { setTax(e.target.value); }} placeholder="Tax" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <input type="number" value={discount} onChange={function (e) { setDiscount(e.target.value); }} placeholder="Discount" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <input type="number" value={paidAmount} onChange={function (e) { setPaidAmount(e.target.value); }} placeholder="Paid amount" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-          <div className="space-y-1 text-sm border-t pt-3 dark:border-slate-700">
-            <div className="flex justify-between"><span>Subtotal</span><span>{subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between font-bold text-lg"><span>Total</span><span>{total.toFixed(2)}</span></div>
-            <div className="flex justify-between text-green-600"><span>Change</span><span>{change.toFixed(2)}</span></div>
+
+        <div className={`${cardClass} space-y-4 p-6`}>
+          <h2 className="font-semibold text-slate-900">Checkout</h2>
+          <FormField label="Customer name" name="name" icon={User} value={customerName} onChange={function (e) { setCustomerName(e.target.value); }} placeholder="Optional" />
+          <FormField label="Customer phone" name="phone" value={customerPhone} onChange={function (e) { setCustomerPhone(e.target.value); }} placeholder="Optional" />
+          <FormField label="Payment method" name="role" type="select" icon={CreditCard} value={paymentMethod} onChange={function (e) { setPaymentMethod(e.target.value); }} options={["Cash", "Card", "Bank Transfer", "Mobile Wallet"]} />
+          <FormField label="Tax" name="price" type="number" icon={Percent} value={tax} onChange={function (e) { setTax(e.target.value); }} />
+          <FormField label="Discount" name="price" type="number" icon={Percent} value={discount} onChange={function (e) { setDiscount(e.target.value); }} />
+          <FormField label="Paid amount" name="price" type="number" icon={DollarSign} value={paidAmount} onChange={function (e) { setPaidAmount(e.target.value); }} required />
+
+          <div className="space-y-2 rounded-xl bg-slate-50 p-4 text-sm">
+            <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>{subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between border-t border-slate-200 pt-2 text-lg font-bold text-slate-900"><span>Total</span><span>{total.toFixed(2)}</span></div>
+            <div className="flex justify-between font-medium text-emerald-600"><span>Change</span><span>{change.toFixed(2)}</span></div>
           </div>
-          <button type="button" disabled={loading} onClick={completeSale} className="w-full rounded-xl bg-green-600 py-3 font-semibold text-white disabled:opacity-50">
+
+          <Button type="button" disabled={loading} onClick={completeSale} icon={Receipt} className="w-full !bg-emerald-600 hover:!bg-emerald-700">
             {loading ? "Processing..." : "Complete Sale"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

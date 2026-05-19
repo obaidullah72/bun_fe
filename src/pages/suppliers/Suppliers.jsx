@@ -1,12 +1,22 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { getSuppliersApi, createSupplierApi, updateSupplierApi, deleteSupplierApi } from "../../api/supplier.api.js";
+import { Plus, Pencil, Trash2, Truck } from "lucide-react";
+import {
+  getSuppliersApi,
+  createSupplierApi,
+  updateSupplierApi,
+  deleteSupplierApi
+} from "../../api/supplier.api.js";
 import { useAuthStore } from "../../store/authStore.js";
 import { canManageInventory } from "../../utils/roles.js";
+import PageHeader from "../../components/ui/PageHeader.jsx";
+import FormField from "../../components/ui/FormField.jsx";
+import Button from "../../components/ui/Button.jsx";
 import Loader from "../../components/common/Loader.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
 import Modal from "../../components/common/Modal.jsx";
+import { tableWrapClass, thClass, tdClass, btnIcon } from "../../components/ui/uiClasses.js";
 
 const emptyForm = { name: "", contactPerson: "", email: "", phone: "", address: "", notes: "" };
 
@@ -40,36 +50,37 @@ function Suppliers() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold dark:text-white">Suppliers</h1>
-        {canEdit && <button type="button" onClick={function () { setOpen(true); setEditing(null); setForm(emptyForm); }} className="rounded-xl bg-blue-600 px-4 py-2 text-white">Add Supplier</button>}
-      </div>
-      {!suppliers.length ? <div className="mt-6"><EmptyState /></div> : (
-        <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-slate-900">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800"><tr><th className="p-4 text-left">Name</th><th className="p-4 text-left">Contact</th><th className="p-4 text-left">Phone</th>{canEdit && <th className="p-4">Actions</th>}</tr></thead>
+      <PageHeader title="Suppliers" subtitle="Manage product suppliers and contacts" action={canEdit ? <Button type="button" icon={Plus} onClick={function () { setOpen(true); setEditing(null); setForm(emptyForm); }}>Add Supplier</Button> : null} />
+      {!suppliers.length ? <EmptyState title="No suppliers" icon={Truck} /> : (
+        <div className={tableWrapClass}>
+          <table className="w-full">
+            <thead className="border-b border-slate-100 bg-slate-50"><tr><th className={thClass}>Name</th><th className={thClass}>Contact</th><th className={thClass}>Phone</th><th className={thClass}>Email</th>{canEdit && <th className={thClass}>Actions</th>}</tr></thead>
             <tbody>{suppliers.map(function (s) {
               return (
-                <tr key={s._id} className="border-t dark:border-slate-800">
-                  <td className="p-4 font-medium">{s.name}</td>
-                  <td className="p-4">{s.contactPerson}</td>
-                  <td className="p-4">{s.phone}</td>
-                  {canEdit && <td className="p-4 space-x-2">
-                    <button type="button" className="text-blue-600" onClick={function () { setEditing(s); setForm({ name: s.name, contactPerson: s.contactPerson || "", email: s.email || "", phone: s.phone || "", address: s.address || "", notes: s.notes || "" }); setOpen(true); }}>Edit</button>
-                    <button type="button" className="text-red-600" onClick={function () { deleteMutation.mutate(s._id); }}>Delete</button>
-                  </td>}
+                <tr key={s._id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                  <td className={`${tdClass} font-medium text-slate-900`}>{s.name}</td>
+                  <td className={tdClass}>{s.contactPerson || "—"}</td>
+                  <td className={tdClass}>{s.phone || "—"}</td>
+                  <td className={tdClass}>{s.email || "—"}</td>
+                  {canEdit && <td className={tdClass}><div className="flex gap-1">
+                    <button type="button" className={btnIcon} onClick={function () { setEditing(s); setForm({ name: s.name, contactPerson: s.contactPerson || "", email: s.email || "", phone: s.phone || "", address: s.address || "", notes: s.notes || "" }); setOpen(true); }}><Pencil size={16} /></button>
+                    <button type="button" className={`${btnIcon} hover:bg-red-50 hover:text-red-600`} onClick={function () { deleteMutation.mutate(s._id); }}><Trash2 size={16} /></button>
+                  </div></td>}
                 </tr>
               );
             })}</tbody>
           </table>
         </div>
       )}
-      <Modal open={open} title={editing ? "Edit Supplier" : "Add Supplier"} onClose={function () { setOpen(false); }}>
-        <form onSubmit={function (e) { e.preventDefault(); saveMutation.mutate(); }} className="space-y-3">
-          {["name", "contactPerson", "email", "phone", "address", "notes"].map(function (field) {
-            return <input key={field} required={field === "name"} value={form[field]} onChange={function (e) { setForm({ ...form, [field]: e.target.value }); }} placeholder={field} className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />;
-          })}
-          <button type="submit" className="w-full rounded-xl bg-blue-600 py-2 text-white">Save</button>
+      <Modal open={open} title={editing ? "Edit Supplier" : "Add Supplier"} onClose={function () { setOpen(false); }} size="lg">
+        <form onSubmit={function (e) { e.preventDefault(); saveMutation.mutate(); }} className="grid gap-4 sm:grid-cols-2">
+          <FormField label="Company name" name="name" icon={Truck} value={form.name} onChange={function (e) { setForm({ ...form, name: e.target.value }); }} required />
+          <FormField label="Contact person" name="contactPerson" value={form.contactPerson} onChange={function (e) { setForm({ ...form, contactPerson: e.target.value }); }} />
+          <FormField label="Email" name="email" type="email" value={form.email} onChange={function (e) { setForm({ ...form, email: e.target.value }); }} />
+          <FormField label="Phone" name="phone" value={form.phone} onChange={function (e) { setForm({ ...form, phone: e.target.value }); }} />
+          <FormField label="Address" name="address" value={form.address} onChange={function (e) { setForm({ ...form, address: e.target.value }); }} className="sm:col-span-2" />
+          <FormField label="Notes" name="notes" type="textarea" value={form.notes} onChange={function (e) { setForm({ ...form, notes: e.target.value }); }} className="sm:col-span-2" />
+          <Button type="submit" className="sm:col-span-2 w-full">Save Supplier</Button>
         </form>
       </Modal>
     </div>

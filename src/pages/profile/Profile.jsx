@@ -1,7 +1,12 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { Save, KeyRound, Lock } from "lucide-react";
 import { useAuthStore } from "../../store/authStore.js";
 import { updateProfileApi, changePasswordApi } from "../../api/auth.api.js";
+import PageHeader from "../../components/ui/PageHeader.jsx";
+import FormField from "../../components/ui/FormField.jsx";
+import Button from "../../components/ui/Button.jsx";
+import { cardClass } from "../../components/ui/uiClasses.js";
 
 function Profile() {
   const user = useAuthStore(function (s) { return s.user; });
@@ -27,19 +32,22 @@ function Profile() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <form onSubmit={saveProfile} className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900 space-y-3">
-        <h2 className="font-semibold">Profile</h2>
-        <input value={profile.name} onChange={function (e) { setProfile({ ...profile, name: e.target.value }); }} className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-        <input value={profile.phone} onChange={function (e) { setProfile({ ...profile, phone: e.target.value }); }} placeholder="Phone" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-        <button type="submit" className="rounded-xl bg-blue-600 px-4 py-2 text-white">Save Profile</button>
-      </form>
-      <form onSubmit={savePassword} className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-900 space-y-3">
-        <h2 className="font-semibold">Change Password</h2>
-        <input type="password" value={passwords.currentPassword} onChange={function (e) { setPasswords({ ...passwords, currentPassword: e.target.value }); }} placeholder="Current password" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-        <input type="password" value={passwords.newPassword} onChange={function (e) { setPasswords({ ...passwords, newPassword: e.target.value }); }} placeholder="New password" className="w-full rounded-xl border px-4 py-2 dark:bg-slate-800" />
-        <button type="submit" className="rounded-xl bg-blue-600 px-4 py-2 text-white">Change Password</button>
-      </form>
+    <div>
+      <PageHeader title="My Profile" subtitle="Update your account information and password" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <form onSubmit={saveProfile} className={`${cardClass} space-y-4 p-6`}>
+          <h2 className="flex items-center gap-2 font-semibold text-slate-900"><Save size={18} className="text-blue-600" /> Profile</h2>
+          <FormField label="Full name" name="name" value={profile.name} onChange={function (e) { setProfile({ ...profile, name: e.target.value }); }} required />
+          <FormField label="Phone" name="phone" value={profile.phone} onChange={function (e) { setProfile({ ...profile, phone: e.target.value }); }} placeholder="Phone number" />
+          <Button type="submit" icon={Save}>Save Profile</Button>
+        </form>
+        <form onSubmit={savePassword} className={`${cardClass} space-y-4 p-6`}>
+          <h2 className="flex items-center gap-2 font-semibold text-slate-900"><KeyRound size={18} className="text-blue-600" /> Change Password</h2>
+          <FormField label="Current password" name="password" type="password" value={passwords.currentPassword} onChange={function (e) { setPasswords({ ...passwords, currentPassword: e.target.value }); }} required />
+          <FormField label="New password" name="newPassword" type="password" icon={Lock} value={passwords.newPassword} onChange={function (e) { setPasswords({ ...passwords, newPassword: e.target.value }); }} required />
+          <Button type="submit" icon={KeyRound}>Change Password</Button>
+        </form>
+      </div>
     </div>
   );
 }
