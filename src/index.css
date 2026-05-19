@@ -17,3 +17,9 @@ body {
   background: #020617;
   color: #e2e8f0;
 }
+
+@media print {
+  aside, header, nav, button, .print\\:hidden {
+    display: none !important;
+  }
+}
