@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Plus, Pencil, Trash2, Tags } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Pencil, Trash2, Tags, Eye } from "lucide-react";
 import {
   getCategoriesApi,
   createCategoryApi,
@@ -92,6 +93,7 @@ function Categories() {
               <tr>
                 <th className={thClass}>Name</th>
                 <th className={thClass}>Description</th>
+                <th className={thClass}>View</th>
                 {canEdit && <th className={thClass}>Actions</th>}
               </tr>
             </thead>
@@ -101,6 +103,11 @@ function Categories() {
                   <tr key={cat._id} className="border-t border-slate-100 hover:bg-slate-50/50">
                     <td className={`${tdClass} font-medium text-slate-900`}>{cat.name}</td>
                     <td className={tdClass}>{cat.description || "—"}</td>
+                    <td className={tdClass}>
+                      <Link to={`/categories/${cat._id}`} className="inline-flex items-center gap-1 text-sm text-blue-600">
+                        <Eye size={14} /> Details
+                      </Link>
+                    </td>
                     {canEdit && (
                       <td className={tdClass}>
                         <div className="flex gap-1">

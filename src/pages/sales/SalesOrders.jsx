@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Receipt } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Receipt, Eye } from "lucide-react";
 import { getSalesOrdersApi } from "../../api/salesOrder.api.js";
 import PageHeader from "../../components/ui/PageHeader.jsx";
 import Loader from "../../components/common/Loader.jsx";
@@ -17,7 +18,7 @@ function SalesOrders() {
         <div className={tableWrapClass}>
           <table className="w-full">
             <thead className="border-b border-slate-100 bg-slate-50">
-              <tr><th className={thClass}>Invoice</th><th className={thClass}>Customer</th><th className={thClass}>Total</th><th className={thClass}>Payment</th><th className={thClass}>Date</th></tr>
+              <tr><th className={thClass}>Invoice</th><th className={thClass}>Customer</th><th className={thClass}>Total</th><th className={thClass}>Payment</th><th className={thClass}>Date</th><th className={thClass}>Action</th></tr>
             </thead>
             <tbody>{orders.map(function (o) {
               return (
@@ -27,6 +28,11 @@ function SalesOrders() {
                   <td className={tdClass}>{o.total}</td>
                   <td className={tdClass}><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium">{o.paymentMethod}</span></td>
                   <td className={tdClass}>{new Date(o.orderDate).toLocaleDateString()}</td>
+                  <td className={tdClass}>
+                    <Link to={`/sales-orders/${o._id}`} className="inline-flex items-center gap-1 text-sm text-blue-600">
+                      <Eye size={14} /> View
+                    </Link>
+                  </td>
                 </tr>
               );
             })}</tbody>

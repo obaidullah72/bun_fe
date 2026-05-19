@@ -24,15 +24,28 @@ function POS() {
   const [paidAmount, setPaidAmount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  function addToCart(product) {
+  function addToCart(product, qty = 1) {
+    if (product.stockQuantity === 0) {
+      toast.error(`${product.name} is out of stock`);
+      return;
+    }
+    const existing = cart.find(function (item) { return item._id === product._id; });
+    const newQty = (existing?.quantity || 0) + qty;
+    if (newQty > product.stockQuantity) {
+      toast.error(`Only ${product.stockQuantity} in stock for ${product.name}`);
+      return;
+    }
+    if (product.stockQuantity <= product.minStockLevel) {
+      toast(`Low stock: ${product.name} (${product.stockQuantity} left)`, { icon: "⚠️" });
+    }
     setCart(function (current) {
-      const existing = current.find(function (item) { return item._id === product._id; });
-      if (existing) {
+      const found = current.find(function (item) { return item._id === product._id; });
+      if (found) {
         return current.map(function (item) {
-          return item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item;
+          return item._id === product._id ? { ...item, quantity: item.quantity + qty } : item;
         });
       }
-      return [...current, { ...product, quantity: 1 }];
+      return [...current, { ...product, quantity: qty }];
     });
   }
 
@@ -51,6 +64,11 @@ function POS() {
 
   function updateQty(id, qty) {
     if (qty < 1) return;
+    const item = cart.find(function (i) { return i._id === id; });
+    if (item && qty > item.stockQuantity) {
+      toast.error(`Only ${item.stockQuantity} in stock`);
+      return;
+    }
     setCart(function (c) { return c.map(function (i) { return i._id === id ? { ...i, quantity: qty } : i; }); });
   }
 
@@ -64,6 +82,10 @@ function POS() {
 
   async function completeSale() {
     if (!cart.length) return toast.error("Cart is empty");
+    const overStock = cart.find(function (i) { return i.quantity > i.stockQuantity; });
+    if (overStock) {
+      return toast.error(`Insufficient stock for ${overStock.name}`);
+    }
     if (Number(paidAmount) < total) return toast.error("Paid amount is insufficient");
     setLoading(true);
     try {

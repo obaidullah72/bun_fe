@@ -1,5 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Bell } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 import { useAuthStore } from "../../store/authStore.js";
 import { btnIcon } from "../ui/uiClasses.js";
 
@@ -20,9 +21,7 @@ function Topbar() {
         <h2 className="text-base font-semibold text-slate-900">{user?.name || "User"}</h2>
       </div>
       <div className="flex items-center gap-2">
-        <button type="button" className={btnIcon} aria-label="Notifications">
-          <Bell size={18} />
-        </button>
+        <NotificationBell />
         <Link
           to="/profile"
           className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 transition hover:bg-white"

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Plus, ArrowLeftRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, ArrowLeftRight, Eye } from "lucide-react";
 import { getAdjustmentsApi, createAdjustmentApi } from "../../api/inventory.api.js";
 import { getProductsApi } from "../../api/product.api.js";
 import PageHeader from "../../components/ui/PageHeader.jsx";
@@ -33,9 +34,20 @@ function Adjustments() {
       <PageHeader title="Inventory Adjustments" subtitle="Increase, decrease, or correct stock levels" action={<Button type="button" icon={Plus} onClick={function () { setOpen(true); }}>New Adjustment</Button>} />
       <div className={tableWrapClass}>
         <table className="w-full">
-          <thead className="border-b border-slate-100 bg-slate-50"><tr><th className={thClass}>Product</th><th className={thClass}>Type</th><th className={thClass}>Qty</th><th className={thClass}>Before</th><th className={thClass}>After</th></tr></thead>
+          <thead className="border-b border-slate-100 bg-slate-50"><tr><th className={thClass}>Product</th><th className={thClass}>Type</th><th className={thClass}>Qty</th><th className={thClass}>Before</th><th className={thClass}>After</th><th className={thClass}>Action</th></tr></thead>
           <tbody>{adjustments.map(function (a) {
-            return <tr key={a._id} className="border-t border-slate-100 hover:bg-slate-50/50"><td className={tdClass}>{a.product?.name}</td><td className={tdClass}><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium capitalize">{a.type}</span></td><td className={tdClass}>{a.quantity}</td><td className={tdClass}>{a.previousStock}</td><td className={tdClass}>{a.newStock}</td></tr>;
+            return (
+              <tr key={a._id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                <td className={tdClass}>{a.product?.name}</td>
+                <td className={tdClass}><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium capitalize">{a.type}</span></td>
+                <td className={tdClass}>{a.quantity}</td>
+                <td className={tdClass}>{a.previousStock}</td>
+                <td className={tdClass}>{a.newStock}</td>
+                <td className={tdClass}>
+                  <Link to={`/inventory/adjustments/${a._id}`} className="inline-flex items-center gap-1 text-sm text-blue-600"><Eye size={14} /> View</Link>
+                </td>
+              </tr>
+            );
           })}</tbody>
         </table>
       </div>

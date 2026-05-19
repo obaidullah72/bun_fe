@@ -1,39 +1,116 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle } from "lucide-react";
-import { getLowStockApi } from "../../api/inventory.api.js";
+import { AlertTriangle, Eye, FileDown, Printer, ShoppingCart } from "lucide-react";
+import { getAlertSummaryApi } from "../../api/alert.api.js";
+import { downloadLowStockPdfApi } from "../../api/report.api.js";
 import PageHeader from "../../components/ui/PageHeader.jsx";
 import Loader from "../../components/common/Loader.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
-import { cardClass } from "../../components/ui/uiClasses.js";
+import Button from "../../components/ui/Button.jsx";
+import StockBadge from "../../components/common/StockBadge.jsx";
+import { tableWrapClass, thClass, tdClass } from "../../components/ui/uiClasses.js";
+import toast from "react-hot-toast";
 
 function LowStock() {
-  const { data, isLoading } = useQuery({ queryKey: ["low-stock"], queryFn: getLowStockApi });
-  const products = data?.data?.data || [];
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ["alert-summary"],
+    queryFn: async function () {
+      const res = await getAlertSummaryApi();
+      return res.data.data;
+    }
+  });
+
+  const products = [
+    ...(data?.outOfStockProducts || []).map(function (p) { return { ...p, alertType: "out" }; }),
+    ...(data?.lowStockProducts || []).map(function (p) { return { ...p, alertType: "low" }; })
+  ];
+
+  async function handlePdf() {
+    setPdfLoading(true);
+    try {
+      await downloadLowStockPdfApi();
+      toast.success("PDF downloaded");
+    } catch {
+      toast.error("PDF export failed");
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
   if (isLoading) return <Loader />;
+
   return (
     <div>
-      <PageHeader title="Low Stock Alerts" subtitle="Products at or below minimum stock level" />
+      <PageHeader
+        title="Low Stock Alerts"
+        subtitle={`${data?.criticalCount || 0} critical · ${data?.warningCount || 0} warnings`}
+        action={
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" icon={Printer} onClick={function () { window.print(); }}>
+              Print
+            </Button>
+            <Button type="button" icon={FileDown} onClick={handlePdf} disabled={pdfLoading}>
+              {pdfLoading ? "Generating..." : "Export PDF"}
+            </Button>
+          </div>
+        }
+      />
+
       {!products.length ? (
         <EmptyState title="All stock levels are healthy" icon={AlertTriangle} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {products.map(function (p) {
-            return (
-              <div key={p._id} className={`${cardClass} border-amber-200 bg-amber-50/50 p-5`}>
-                <div className="flex items-start gap-3">
-                  <span className="rounded-xl bg-amber-100 p-2 text-amber-600"><AlertTriangle size={18} /></span>
-                  <div>
-                    <p className="font-semibold text-slate-900">{p.name}</p>
-                    <p className="text-sm text-slate-500">{p.sku}</p>
-                    <p className="mt-2 text-sm font-medium text-amber-700">Stock: {p.stockQuantity} / Min: {p.minStockLevel}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className={tableWrapClass}>
+          <table className="w-full print:text-xs">
+            <thead className="border-b border-slate-100 bg-slate-50">
+              <tr>
+                <th className={thClass}>Product</th>
+                <th className={thClass}>SKU</th>
+                <th className={thClass}>Stock</th>
+                <th className={thClass}>Min</th>
+                <th className={thClass}>Shelf</th>
+                <th className={thClass}>Supplier</th>
+                <th className={thClass}>Status</th>
+                <th className={thClass}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map(function (p) {
+                const rowClass =
+                  p.alertType === "out"
+                    ? "bg-red-50/80 hover:bg-red-50"
+                    : "bg-orange-50/50 hover:bg-orange-50";
+                return (
+                  <tr key={p._id} className={`border-t border-slate-100 ${rowClass}`}>
+                    <td className={`${tdClass} font-medium text-slate-900`}>{p.name}</td>
+                    <td className={tdClass}>{p.sku}</td>
+                    <td className={tdClass}>{p.stockQuantity}</td>
+                    <td className={tdClass}>{p.minStockLevel}</td>
+                    <td className={tdClass}>{p.shelfNameSnapshot || p.shelf?.shelfName || "—"}</td>
+                    <td className={tdClass}>{p.supplier?.name || "—"}</td>
+                    <td className={tdClass}>
+                      <StockBadge stock={p.stockQuantity} minStock={p.minStockLevel} />
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex gap-2">
+                        <Link to={`/products/${p._id}`} className="inline-flex items-center gap-1 text-sm text-blue-600">
+                          <Eye size={14} /> View
+                        </Link>
+                        <Link to="/purchase-orders" className="inline-flex items-center gap-1 text-sm text-slate-600">
+                          <ShoppingCart size={14} /> PO
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
 }
+
 export default LowStock;

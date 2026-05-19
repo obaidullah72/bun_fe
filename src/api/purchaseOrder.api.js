@@ -6,3 +6,7 @@ export const createPurchaseOrderApi = (data) => api.post("/purchase-orders", dat
 export const updatePurchaseOrderApi = (id, data) => api.put(`/purchase-orders/${id}`, data);
 export const deletePurchaseOrderApi = (id) => api.delete(`/purchase-orders/${id}`);
 export const receivePurchaseOrderApi = (id) => api.put(`/purchase-orders/${id}/receive`);
+export const downloadPurchaseOrderPdfApi = (id) =>
+  import("../utils/downloadPdf.js").then(function (m) {
+    return m.downloadPdfFromApi(`/purchase-orders/${id}/pdf`, `purchase-order-${id}.pdf`);
+  });

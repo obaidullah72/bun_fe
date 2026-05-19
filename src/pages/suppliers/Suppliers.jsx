@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Plus, Pencil, Trash2, Truck } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Pencil, Trash2, Truck, Eye } from "lucide-react";
 import {
   getSuppliersApi,
   createSupplierApi,
@@ -54,7 +55,7 @@ function Suppliers() {
       {!suppliers.length ? <EmptyState title="No suppliers" icon={Truck} /> : (
         <div className={tableWrapClass}>
           <table className="w-full">
-            <thead className="border-b border-slate-100 bg-slate-50"><tr><th className={thClass}>Name</th><th className={thClass}>Contact</th><th className={thClass}>Phone</th><th className={thClass}>Email</th>{canEdit && <th className={thClass}>Actions</th>}</tr></thead>
+            <thead className="border-b border-slate-100 bg-slate-50"><tr><th className={thClass}>Name</th><th className={thClass}>Contact</th><th className={thClass}>Phone</th><th className={thClass}>Email</th><th className={thClass}>View</th>{canEdit && <th className={thClass}>Actions</th>}</tr></thead>
             <tbody>{suppliers.map(function (s) {
               return (
                 <tr key={s._id} className="border-t border-slate-100 hover:bg-slate-50/50">
@@ -62,6 +63,9 @@ function Suppliers() {
                   <td className={tdClass}>{s.contactPerson || "—"}</td>
                   <td className={tdClass}>{s.phone || "—"}</td>
                   <td className={tdClass}>{s.email || "—"}</td>
+                  <td className={tdClass}>
+                    <Link to={`/suppliers/${s._id}`} className="inline-flex items-center gap-1 text-sm text-blue-600"><Eye size={14} /> Details</Link>
+                  </td>
                   {canEdit && <td className={tdClass}><div className="flex gap-1">
                     <button type="button" className={btnIcon} onClick={function () { setEditing(s); setForm({ name: s.name, contactPerson: s.contactPerson || "", email: s.email || "", phone: s.phone || "", address: s.address || "", notes: s.notes || "" }); setOpen(true); }}><Pencil size={16} /></button>
                     <button type="button" className={`${btnIcon} hover:bg-red-50 hover:text-red-600`} onClick={function () { deleteMutation.mutate(s._id); }}><Trash2 size={16} /></button>

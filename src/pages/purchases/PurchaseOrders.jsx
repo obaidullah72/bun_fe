@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { ClipboardList, PackageCheck } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ClipboardList, PackageCheck, Eye } from "lucide-react";
 import { getPurchaseOrdersApi, receivePurchaseOrderApi } from "../../api/purchaseOrder.api.js";
 import PageHeader from "../../components/ui/PageHeader.jsx";
 import Button from "../../components/ui/Button.jsx";
@@ -36,6 +37,9 @@ function PurchaseOrders() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  <Link to={`/purchase-orders/${o._id}`} className="text-sm text-blue-600 inline-flex items-center gap-1">
+                    <Eye size={14} /> View
+                  </Link>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${o.status === "received" ? "bg-emerald-50 text-emerald-700" : o.status === "ordered" ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{o.status}</span>
                   {o.status !== "received" && o.status !== "cancelled" && (
                     <Button type="button" variant="secondary" icon={PackageCheck} onClick={function () { receiveMutation.mutate(o._id); }}>Receive</Button>
