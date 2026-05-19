@@ -33,7 +33,7 @@ function AuthLayout({ title, subtitle, children, footer }) {
           {children}
 
           {footer && (
-            <footer className="mt-8 border-t border-slate-100 pt-6">{footer}</footer>
+            <footer className="mt-4 pt-6">{footer}</footer>
           )}
         </div>
       </div>
